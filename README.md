@@ -15,10 +15,11 @@ I have only tested this on a Raspi Zero W board with XXX, so it is possible extr
   git clone https://github.com/njia4/thaumoctopus
   ```
 
-* Install ```libdrm```
+* You should already have ```libdrm``` on Raspi OS. In case this is not true, you can install it using
 
   ```shell
-  sudo apt-get install libdrm
+  sudo apt-get update
+  sudo apt-get install libdrm-dev
   ```
 
 * Make 
@@ -36,4 +37,20 @@ I have only tested this on a Raspi Zero W board with XXX, so it is possible extr
   ```
 
 ## Usage
+
+First make sure there is some display devices plugged into the board, otherwise the preview cannot find any appropriate device and ```crtc```. 
+
+To add a display plane, you have to create a ```drm_buffer``` struct and manually fill in the required information. The preview can diaplay both dumb buffers and ```dma-buf```. If a dumb buffer is used, the preview will allocate the memory and export an userspace pointer. Different buffer informations are required for the two type of buffer. See the table below for details. 
+
+| Variable     | type           | Dumb buffer         | ```dma-buff```                |
+| ------------ | -------------- | ------------------- | ----------------------------- |
+| fb_id        | ```uint32_t``` | N/A                 | File descriptor of the buffer |
+| width        | ```uint32_t``` | Width of the frame  | Width of the frame            |
+| height       | ```uint32_t``` | Height of the frame | Height of the frame           |
+| bpp          | ```uint32_t``` | Bytes per pixel     | N/A                           |
+| pixel_format | ```uint32_t``` | N/A                 | ```DRM``` pixel fourcc code   |
+
+The preview can also resize, shift, and crop the frame. This is achieved by setting the display parameters in the ```drm_buffer```. See the example for further details. 
+
+## Example (dumb buffer)
 
