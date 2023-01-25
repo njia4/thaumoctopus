@@ -4,8 +4,8 @@ libdir=${exec_prefix}/@CMAKE_INSTALL_LIBDIR@
 includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
 
 Name: @PROJECT_NAME@
-Description: A lightweight DRM based preview
-Version: 0.0.1
+Description: @PROJECT_DESCRIPTION@
+Version: @PROJECT_VERSION@
 
 Requires: libdrm
 Libs: -L${libdir} -lmylib
