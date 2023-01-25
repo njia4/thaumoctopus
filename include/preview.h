@@ -20,7 +20,7 @@
 #include <memory>
 
 // #include <buffer.h>
-#include <glog/logging.h>
+// #include <glog/logging.h>
 
 // For StreamInfo
 // TODO: REPLACE IT WITH HARD CODED ONES
