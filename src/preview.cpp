@@ -295,10 +295,16 @@ int drmPreview::addPlane(std::shared_ptr<drm_buffer> buffer_, buffer_type bo_typ
     if (plane_id == -1)
         throw std::runtime_error("No plane found");
 
-    buffer_->crtc_x = (uint32_t) display_width * buffer_->display_offset_x;
-    buffer_->crtc_y = (uint32_t) display_height * buffer_->display_offset_y;
-    buffer_->crtc_w = (uint32_t) display_width * buffer_->display_size_x;
-    buffer_->crtc_h = (uint32_t) display_height * buffer_->display_size_y;
+    buffer_->crtc_x = (uint32_t) display_width  * buffer_->display_x;
+    buffer_->crtc_y = (uint32_t) display_height * buffer_->display_y;
+    buffer_->crtc_w = (uint32_t) display_width  * buffer_->display_w;
+    buffer_->crtc_h = (uint32_t) display_height * buffer_->display_h;
+
+    buffer_->src_x = (uint32_t) buffer_->width  * buffer_->roi_x;
+    buffer_->src_y = (uint32_t) buffer_->height * buffer_->roi_y;
+    buffer_->src_w = (uint32_t) buffer_->width  * buffer_->roi_w;
+    buffer_->src_h = (uint32_t) buffer_->height * buffer_->roi_h;
+
     buffer_->pixel_format = buffer_->pixel_format;
 
     buffers_[plane_id] = buffer_;

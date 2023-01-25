@@ -43,14 +43,23 @@ struct drm_buffer {
     uint32_t pixel_format;
     void *vaddr;
 
-    float display_offset_x;
-    float display_offset_y;
-    float display_size_x;
-    float display_size_y;
+    float display_x;
+    float display_y;
+    float display_w;
+    float display_h;
     uint32_t crtc_x;
     uint32_t crtc_y;
     uint32_t crtc_w;
     uint32_t crtc_h;
+
+    float roi_x;
+    float roi_y;
+    float roi_w;
+    float roi_h;
+    uint32_t src_x;
+    uint32_t src_y;
+    uint32_t src_w;
+    uint32_t src_h;
 };
 
 static int drm_set_property(int fd, int plane_id, char const *name, char const *val);
