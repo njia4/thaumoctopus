@@ -1,4 +1,0 @@
-/usr/local/lib/arm-linux-gnueabihf/libpreview.so.0.0.1
-/usr/local/lib/arm-linux-gnueabihf/libpreview.so.1
-/usr/local/lib/arm-linux-gnueabihf/libpreview.so
-/usr/local/include/preview.h
