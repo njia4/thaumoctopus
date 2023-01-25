@@ -20,7 +20,12 @@ set_target_properties(preview PROPERTIES
 target_link_libraries(preview ${LIBDRM_LIBRARIES})
 target_include_directories(preview PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include ${LIBDRM_INCLUDE_DIRS})
 
+configure_file(preview.pc.in preview.pc @ONLY)
+
 install(TARGETS preview 
 	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 	PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 	)
+
+install(FILES ${CMAKE_BINARY_DIR}/preview.pc
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig)
