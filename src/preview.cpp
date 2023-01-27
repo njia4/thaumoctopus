@@ -105,13 +105,15 @@ drmPreview::drmPreview()
     }
     catch (std::exception const &e)
     {
-        throw;
+        throw runtime_error("Failed to find available CRTC!");
     }
 }
 
 drmPreview::~drmPreview()
 {
-
+    // Remove all the buffers
+    // Free planes and crtc
+    // Close the DRM device
 }
 
 void drmPreview::findCrtc()
@@ -224,6 +226,7 @@ int drmPreview::findPlane(unsigned int fourcc)
 
     try
     {
+        // We want to add plane on the top, so use the plane ID from the previously added plane. 
         int top_plane_id = 0;
         top_plane_id = buffers_.size();
         if (top_plane_id >= planes->count_planes)
