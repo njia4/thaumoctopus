@@ -73,6 +73,7 @@ public:
     int addPlane(std::shared_ptr<drm_buffer> buffer_, buffer_type type);
     void showPlane(int plane_id);
     void reset() {};
+    void debug(int debug) { verbose = debug; };
 
 private:
     void findCrtc();
@@ -80,7 +81,7 @@ private:
     void addDumbBuffer(int plane_id);
     void addPrimeBuffer(int plane_id);
 
-    int verbose;
+    int verbose = 1;
     int drmfd;
     int con_id;
     int crtc_id;

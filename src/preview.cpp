@@ -89,9 +89,7 @@ int getFBInfo(std::shared_ptr<drm_buffer> buffer_, uint32_t offsets[], uint32_t 
 }
 
 drmPreview::drmPreview()
-{   
-    verbose = 1; // TODO
-    
+{
     // Open the drm device
     drmfd = drmOpen("vc4", NULL);
     // drmfd_ = open("/dev/dri/card0", O_RDWR | O_CLOEXEC);
@@ -293,7 +291,7 @@ int drmPreview::addPlane(std::shared_ptr<drm_buffer> buffer_, buffer_type bo_typ
     plane_id = findPlane(buffer_->pixel_format);
     
     if (plane_id == -1)
-        throw std::runtime_error("No plane found");
+        throw std::runtime_error("No available plane found.");
 
     buffer_->crtc_x = (uint32_t) display_width  * buffer_->display_x;
     buffer_->crtc_y = (uint32_t) display_height * buffer_->display_y;
@@ -364,6 +362,28 @@ void drmPreview::addDumbBuffer(int plane_id)
 
 }
 
+// void drmPreview::addPrimeBuffer(int plane_id)
+// {
+//     std::shared_ptr<drm_buffer> buf_ = buffers_[plane_id];
+
+//     if (drmPrimeFDToHandle(drmfd, buf_->fb_id, &buf_->handle))
+//         throw std::runtime_error("drmPrimeFDToHandle failed for fd " + std::to_string(buf_->fb_id));
+
+//     int stride = buf_->width; // TODO: ASSIGN PROPER STRIDE IN MIPI CAMERA. IT'S IN STREAM INFO
+//     int height = buf_->height;
+//     int width  = buf_->width;
+
+//     uint32_t offsets[4];
+//     uint32_t pitches[4];
+//     uint32_t bo_handles[4];
+
+//     if (getFBInfo(buf_, offsets, pitches, bo_handles))
+//         throw std::runtime_error("getFBInfo failed: " + std::string(ERRSTR));
+
+//     if (drmModeAddFB2(drmfd, width, height, buf_->pixel_format, bo_handles, pitches, offsets, &buf_->handle, 0))
+//         throw std::runtime_error("drmModeAddFB2 failed: " + std::string(ERRSTR));
+// }
+
 void drmPreview::addPrimeBuffer(int plane_id)
 {
     std::shared_ptr<drm_buffer> buf_ = buffers_[plane_id];
@@ -375,25 +395,23 @@ void drmPreview::addPrimeBuffer(int plane_id)
     int height = buf_->height;
     int width  = buf_->width;
 
-    uint32_t offsets[4];
-    uint32_t pitches[4];
-    uint32_t bo_handles[4];
-
-    if (getFBInfo(buf_, offsets, pitches, bo_handles))
-        throw std::runtime_error("getFBInfo failed: " + std::string(ERRSTR));
+    uint32_t offsets[4] = { 0, stride * height, stride * height + (stride / 2) * (height / 2) };
+    uint32_t pitches[4] = { stride, stride / 2, stride / 2 };
+    uint32_t bo_handles[4] = { buf_->handle, buf_->handle, buf_->handle };
 
     if (drmModeAddFB2(drmfd, width, height, buf_->pixel_format, bo_handles, pitches, offsets, &buf_->handle, 0))
         throw std::runtime_error("drmModeAddFB2 failed: " + std::string(ERRSTR));
-
 }
 
 void drmPreview::showPlane(int plane_id)
 {
-    // TODO: CUSTOM DEFINED BUFFER CROP
-    
     std::shared_ptr<drm_buffer> buf_ = buffers_[plane_id];
 
-    drmModeSetPlane(drmfd, plane_id, crtc_id, buf_->fb_id, 0,
+    // drmModeSetPlane(drmfd, plane_id, crtc_id, buf_->fb_id, 0,
+    //     buf_->crtc_x, buf_->crtc_y, buf_->crtc_w, buf_->crtc_h,
+    //     0, 0, buf_->width << 16, buf_->height << 16);
+
+    drmModeSetPlane(drmfd, plane_id, crtc_id, buf_->handle, 0,
         buf_->crtc_x, buf_->crtc_y, buf_->crtc_w, buf_->crtc_h,
-        0, 0, buf_->width << 16, buf_->height << 16);
+        buf_->src_x, buf_->src_y, buf_->src_w << 16, buf_->src_h << 16);
 }
