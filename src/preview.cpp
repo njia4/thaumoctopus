@@ -62,7 +62,15 @@ done:
     return ret;
 }
 
-int getFBInfo(std::shared_ptr<drm_buffer> buffer_, uint32_t offsets[], uint32_t pitches[], uint32_t bo_handles[])
+/**
+ * \brief A utility function to fill in the information for adding buffer
+ * 
+ * \todo Get bpp from the pixel format or fourcc code, so as to support more format
+ */
+int makeBufferInfo(std::shared_ptr<drm_buffer> buffer_, 
+    uint32_t offsets[], 
+    uint32_t pitches[], 
+    uint32_t bo_handles[])
 {
     uint32_t pixel_format = buffer_->pixel_format;
     int stride = buffer_->width;
@@ -90,9 +98,8 @@ int getFBInfo(std::shared_ptr<drm_buffer> buffer_, uint32_t offsets[], uint32_t 
 
 drmPreview::drmPreview()
 {
-    // Open the drm device
     drmfd = drmOpen("vc4", NULL);
-    // drmfd_ = open("/dev/dri/card0", O_RDWR | O_CLOEXEC);
+    
     if (drmfd < 0)
         throw std::runtime_error("drmOpen failed: " + std::string(ERRSTR));
     if (!drmIsMaster(drmfd))
@@ -150,7 +157,7 @@ void drmPreview::findCrtc()
             {
                 con_id = con->connector_id;
                 crtc_id = crtc->crtc_id;
-                conn = con; // TODO: THIS IS FOR ADDING DUMB BUFFER ONLY (used in the drmModeSetCrtc())
+                // conn = con; // TODO: THIS IS FOR ADDING DUMB BUFFER ONLY (used in the drmModeSetCrtc())
             }
 
             if (crtc)
@@ -349,7 +356,9 @@ void drmPreview::addDumbBuffer(int plane_id)
     buf_->vaddr = mmap(NULL, create.size, PROT_READ | PROT_WRITE, MAP_SHARED, drmfd, map.offset);
 
     // Set controller
-    drmModeSetCrtc(drmfd, crtc_id, buf_->fb_id, 0, 0, (uint32_t*) &con_id, 1, &conn->modes[0]);
+    drmModeRes *res = drmModeGetResources(drmfd);
+    drmModeConnector *con = drmModeGetConnector(drmfd, res->connectors[con_id]);
+    drmModeSetCrtc(drmfd, crtc_id, buf_->fb_id, 0, 0, (uint32_t*) &con_id, 1, &con->modes[0]);
 
 }
 
@@ -368,7 +377,7 @@ void drmPreview::addPrimeBuffer(int plane_id)
     uint32_t pitches[4];
     uint32_t bo_handles[4];
 
-    if (getFBInfo(buf_, offsets, pitches, bo_handles))
+    if (makeBufferInfo(buf_, offsets, pitches, bo_handles))
         throw std::runtime_error("getFBInfo failed: " + std::string(ERRSTR));
 
     if (drmModeAddFB2(drmfd, width, height, buf_->pixel_format, bo_handles, pitches, offsets, &buf_->fb_id, 0))

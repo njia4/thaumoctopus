@@ -26,6 +26,9 @@ enum buffer_type
         DRM_PRIME_BUFFER
     };
 
+using EXPAND = -1;
+using AUTO   = -2;
+
 struct drm_buffer {
     uint32_t fd;
     uint32_t fb_id;
@@ -57,18 +60,18 @@ struct drm_buffer {
     uint32_t src_h;
 };
 
-static int drm_set_property(int fd, int plane_id, char const *name, char const *val);
-
 class drmPreview
 {
 public:
     drmPreview();
     ~drmPreview();
+
+    using drmBufferPtr = std::unique_ptr<drm_buffer>;
+
     std::shared_ptr<drm_buffer> makeBuffer();
-    int addPlane(std::shared_ptr<drm_buffer> buffer_, buffer_type type);
+    int addPlane(drmBufferPtr buffer_, buffer_type type);
     void showPlane(int plane_id);
-    void reset() {};
-    void debug(int debug) { verbose = debug; };
+    void clearPlane(int plane_id) {};
 
 private:
     void findCrtc();
@@ -76,13 +79,12 @@ private:
     void addDumbBuffer(int plane_id);
     void addPrimeBuffer(int plane_id);
 
-    int verbose = 0;
     int drmfd;
     int con_id;
     int crtc_id;
     unsigned int display_width;
     unsigned int display_height;
-    std::map<int, std::shared_ptr<drm_buffer>> buffers_;
+    std::map<int, drmBufferPtr> buffers_;
 
-    drmModeConnector *conn; // TODO: THIS IS FOR ADDING THE DUMB BUFFER, MAYBE GET THE OBJECT BY IT'S ID
+    // drmModeConnector *conn; // TODO: THIS IS FOR ADDING THE DUMB BUFFER, MAYBE GET THE OBJECT BY IT'S ID
 };
