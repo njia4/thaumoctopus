@@ -303,6 +303,8 @@ int drmPreview::addPlane(std::shared_ptr<drm_buffer> buffer_, buffer_type bo_typ
     buffer_->src_w = (uint32_t) buffer_->width  * buffer_->roi_w;
     buffer_->src_h = (uint32_t) buffer_->height * buffer_->roi_h;
 
+    // TODO: Check if src_w and src_h exceeds the frame size
+
     buffer_->pixel_format = buffer_->pixel_format;
 
     buffers_[plane_id] = buffer_;
@@ -350,7 +352,7 @@ void drmPreview::addDumbBuffer(int plane_id)
     buf_->size   = create.size;
     buf_->handle = create.handle;
     if (drmModeAddFB(drmfd, buf_->width, buf_->height, buf_->bpp, buf_->bpp, buf_->pitch, buf_->handle, &buf_->fb_id))
-        throw std::runtime_error("drmModeAddFB2 failed: " + std::string(ERRSTR));
+        throw std::runtime_error("drmModeAddFB failed: " + std::string(ERRSTR));
 
     // Map buffer to userspace address
     map.handle = buf_->handle;
@@ -362,56 +364,56 @@ void drmPreview::addDumbBuffer(int plane_id)
 
 }
 
-// void drmPreview::addPrimeBuffer(int plane_id)
-// {
-//     std::shared_ptr<drm_buffer> buf_ = buffers_[plane_id];
-
-//     if (drmPrimeFDToHandle(drmfd, buf_->fb_id, &buf_->handle))
-//         throw std::runtime_error("drmPrimeFDToHandle failed for fd " + std::to_string(buf_->fb_id));
-
-//     int stride = buf_->width; // TODO: ASSIGN PROPER STRIDE IN MIPI CAMERA. IT'S IN STREAM INFO
-//     int height = buf_->height;
-//     int width  = buf_->width;
-
-//     uint32_t offsets[4];
-//     uint32_t pitches[4];
-//     uint32_t bo_handles[4];
-
-//     if (getFBInfo(buf_, offsets, pitches, bo_handles))
-//         throw std::runtime_error("getFBInfo failed: " + std::string(ERRSTR));
-
-//     if (drmModeAddFB2(drmfd, width, height, buf_->pixel_format, bo_handles, pitches, offsets, &buf_->handle, 0))
-//         throw std::runtime_error("drmModeAddFB2 failed: " + std::string(ERRSTR));
-// }
-
 void drmPreview::addPrimeBuffer(int plane_id)
 {
     std::shared_ptr<drm_buffer> buf_ = buffers_[plane_id];
 
-    if (drmPrimeFDToHandle(drmfd, buf_->fb_id, &buf_->handle))
-        throw std::runtime_error("drmPrimeFDToHandle failed for fd " + std::to_string(buf_->fb_id));
+    if (drmPrimeFDToHandle(drmfd, buf_->fd, &buf_->handle))
+        throw std::runtime_error("drmPrimeFDToHandle failed for fd " + std::to_string(buf_->fd));
 
     int stride = buf_->width; // TODO: ASSIGN PROPER STRIDE IN MIPI CAMERA. IT'S IN STREAM INFO
     int height = buf_->height;
     int width  = buf_->width;
 
-    uint32_t offsets[4] = { 0, stride * height, stride * height + (stride / 2) * (height / 2) };
-    uint32_t pitches[4] = { stride, stride / 2, stride / 2 };
-    uint32_t bo_handles[4] = { buf_->handle, buf_->handle, buf_->handle };
+    uint32_t offsets[4];
+    uint32_t pitches[4];
+    uint32_t bo_handles[4];
 
-    if (drmModeAddFB2(drmfd, width, height, buf_->pixel_format, bo_handles, pitches, offsets, &buf_->handle, 0))
+    if (getFBInfo(buf_, offsets, pitches, bo_handles))
+        throw std::runtime_error("getFBInfo failed: " + std::string(ERRSTR));
+
+    if (drmModeAddFB2(drmfd, width, height, buf_->pixel_format, bo_handles, pitches, offsets, &buf_->fb_id, 0))
         throw std::runtime_error("drmModeAddFB2 failed: " + std::string(ERRSTR));
 }
+
+// void drmPreview::addPrimeBuffer(int plane_id)
+// {
+//     std::shared_ptr<drm_buffer> buf_ = buffers_[plane_id];
+
+//     if (drmPrimeFDToHandle(drmfd, buf_->fd, &buf_->handle))
+//         throw std::runtime_error("drmPrimeFDToHandle failed for fd " + std::to_string(buf_->fd));
+
+//     int stride = buf_->width; // TODO: ASSIGN PROPER STRIDE IN MIPI CAMERA. IT'S IN STREAM INFO
+//     int height = buf_->height;
+//     int width  = buf_->width;
+
+//     uint32_t offsets[4] = { 0, stride * height, stride * height + (stride / 2) * (height / 2) };
+//     uint32_t pitches[4] = { stride, stride / 2, stride / 2 };
+//     uint32_t bo_handles[4] = { buf_->handle, buf_->handle, buf_->handle };
+
+//     if (drmModeAddFB2(drmfd, width, height, buf_->pixel_format, bo_handles, pitches, offsets, &buf_->fb_id, 0))
+//         throw std::runtime_error("drmModeAddFB2 failed: " + std::string(ERRSTR));
+// }
 
 void drmPreview::showPlane(int plane_id)
 {
     std::shared_ptr<drm_buffer> buf_ = buffers_[plane_id];
 
-    // drmModeSetPlane(drmfd, plane_id, crtc_id, buf_->fb_id, 0,
-    //     buf_->crtc_x, buf_->crtc_y, buf_->crtc_w, buf_->crtc_h,
-    //     0, 0, buf_->width << 16, buf_->height << 16);
-
-    drmModeSetPlane(drmfd, plane_id, crtc_id, buf_->handle, 0,
+    drmModeSetPlane(drmfd, plane_id, crtc_id, buf_->fb_id, 0,
         buf_->crtc_x, buf_->crtc_y, buf_->crtc_w, buf_->crtc_h,
-        buf_->src_x, buf_->src_y, buf_->src_w << 16, buf_->src_h << 16);
+        buf_->src_x << 16, buf_->src_y << 16, buf_->src_w << 16, buf_->src_h << 16);
+
+    // drmModeSetPlane(drmfd, plane_id, crtc_id, buf_->handle, 0,
+    //     buf_->crtc_x, buf_->crtc_y, buf_->crtc_w, buf_->crtc_h,
+    //     buf_->src_x, buf_->src_y, buf_->src_w << 16, buf_->src_h << 16);
 }

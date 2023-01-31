@@ -33,6 +33,7 @@ enum buffer_type
     };
 
 struct drm_buffer {
+    uint32_t fd;
     uint32_t fb_id;
     uint32_t width;
     uint32_t height;
