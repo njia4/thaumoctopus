@@ -82,7 +82,7 @@ private:
     void addDumbBuffer(int plane_id);
     void addPrimeBuffer(int plane_id);
 
-    int verbose = 1;
+    int verbose = 0;
     int drmfd;
     int con_id;
     int crtc_id;
