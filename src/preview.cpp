@@ -105,7 +105,7 @@ drmPreview::drmPreview()
     }
     catch (std::exception const &e)
     {
-        throw runtime_error("Failed to find available CRTC!");
+        throw std::runtime_error("Failed to find available CRTC!");
     }
 }
 
@@ -129,8 +129,7 @@ void drmPreview::findCrtc()
     // Find connectors
     if (!con_id)
     {
-        if (verbose)
-            std::cerr << "No connector ID specified.  Choosing default from list:" << std::endl;
+        LOG(INFO) << "No connector ID specified.  Choosing default from list:";
 
         for (i = 0; i < res->count_connectors; i++)
         {
@@ -160,10 +159,9 @@ void drmPreview::findCrtc()
                 display_height = crtc->height;
             }
 
-            if (verbose)
-                std::cerr << "Connector " << con->connector_id << " (crtc " << (crtc ? crtc->crtc_id : 0) << "): type "
-                          << con->connector_type << ", " << (crtc ? crtc->width : 0) << "x" << (crtc ? crtc->height : 0)
-                          << (con_id == (int)con->connector_id ? " (chosen)" : "") << std::endl;
+            LOG(INFO) << "Connector " << con->connector_id << " (crtc " << (crtc ? crtc->crtc_id : 0) << "): type "
+                      << con->connector_type << ", " << (crtc ? crtc->width : 0) << "x" << (crtc ? crtc->height : 0)
+                      << (con_id == (int)con->connector_id ? " (chosen)" : "");
         }
 
         if (!con_id)
@@ -281,9 +279,6 @@ std::shared_ptr<drm_buffer> drmPreview::makeBuffer()
     buffer_->width = 0;
     buffer_->height = 0;
 
-    if (verbose)
-        std::cout << "Generating new buffer" << std::endl;
-
     return buffer_;
 }
 
@@ -312,20 +307,15 @@ int drmPreview::addPlane(std::shared_ptr<drm_buffer> buffer_, buffer_type bo_typ
 
     buffers_[plane_id] = buffer_;
 
-    if (verbose)
-        std::cout << "Plane (" << std::to_string(plane_id) << ")" << std::endl;
-
     if (bo_type == DRM_DUMB_BUFFER)
     {
-        if (verbose)
-            std::cout << "Adding a dumb buffer to plane (" << std::to_string(plane_id) << ")" << std::endl;
+        LOG(INFO) << "Adding a dumb buffer to plane (" << std::to_string(plane_id) << ")";
         addDumbBuffer(plane_id);
         return plane_id;
     }
     if (bo_type == DRM_PRIME_BUFFER)
     {
-        if (verbose)
-            std::cout << "Adding a prime buffer to plane (" << std::to_string(plane_id) << ")" << std::endl;
+        LOG(INFO) << "Adding a prime buffer to plane (" << std::to_string(plane_id) << ")";
         addPrimeBuffer(plane_id);
         return plane_id;
     }
@@ -334,11 +324,7 @@ int drmPreview::addPlane(std::shared_ptr<drm_buffer> buffer_, buffer_type bo_typ
 }
 
 void drmPreview::addDumbBuffer(int plane_id)
-{
-    // TODO: ADD SOME PRINTOUT OF THE BUFFER INFORMATION
-    if (verbose)
-        std::cout << "Adding dumb buffer to plane (" << std::to_string(plane_id) << ")" << std::endl;
-    
+{   
     std::shared_ptr<drm_buffer> buf_ = buffers_[plane_id];
 
     struct drm_mode_create_dumb create = {};
@@ -389,25 +375,6 @@ void drmPreview::addPrimeBuffer(int plane_id)
         throw std::runtime_error("drmModeAddFB2 failed: " + std::string(ERRSTR));
 }
 
-// void drmPreview::addPrimeBuffer(int plane_id)
-// {
-//     std::shared_ptr<drm_buffer> buf_ = buffers_[plane_id];
-
-//     if (drmPrimeFDToHandle(drmfd, buf_->fd, &buf_->handle))
-//         throw std::runtime_error("drmPrimeFDToHandle failed for fd " + std::to_string(buf_->fd));
-
-//     int stride = buf_->width; // TODO: ASSIGN PROPER STRIDE IN MIPI CAMERA. IT'S IN STREAM INFO
-//     int height = buf_->height;
-//     int width  = buf_->width;
-
-//     uint32_t offsets[4] = { 0, stride * height, stride * height + (stride / 2) * (height / 2) };
-//     uint32_t pitches[4] = { stride, stride / 2, stride / 2 };
-//     uint32_t bo_handles[4] = { buf_->handle, buf_->handle, buf_->handle };
-
-//     if (drmModeAddFB2(drmfd, width, height, buf_->pixel_format, bo_handles, pitches, offsets, &buf_->fb_id, 0))
-//         throw std::runtime_error("drmModeAddFB2 failed: " + std::string(ERRSTR));
-// }
-
 void drmPreview::showPlane(int plane_id)
 {
     std::shared_ptr<drm_buffer> buf_ = buffers_[plane_id];
@@ -415,8 +382,4 @@ void drmPreview::showPlane(int plane_id)
     drmModeSetPlane(drmfd, plane_id, crtc_id, buf_->fb_id, 0,
         buf_->crtc_x, buf_->crtc_y, buf_->crtc_w, buf_->crtc_h,
         buf_->src_x << 16, buf_->src_y << 16, buf_->src_w << 16, buf_->src_h << 16);
-
-    // drmModeSetPlane(drmfd, plane_id, crtc_id, buf_->handle, 0,
-    //     buf_->crtc_x, buf_->crtc_y, buf_->crtc_w, buf_->crtc_h,
-    //     buf_->src_x, buf_->src_y, buf_->src_w << 16, buf_->src_h << 16);
 }

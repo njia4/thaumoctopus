@@ -10,6 +10,7 @@
 #include <drm_mode.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
+#include <glog/logging.h>
 
 #include <iostream>
 #include <string>
@@ -18,13 +19,6 @@
 #include <map>
 #include <cstring>
 #include <memory>
-
-// #include <buffer.h>
-// #include <glog/logging.h>
-
-// For StreamInfo
-// TODO: REPLACE IT WITH HARD CODED ONES
-// #include <optional>
 
 enum buffer_type
     {
