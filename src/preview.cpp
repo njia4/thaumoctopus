@@ -157,7 +157,6 @@ void drmPreview::findCrtc()
             {
                 con_id = con->connector_id;
                 crtc_id = crtc->crtc_id;
-                // conn = con; // TODO: THIS IS FOR ADDING DUMB BUFFER ONLY (used in the drmModeSetCrtc())
             }
 
             if (crtc)
@@ -294,11 +293,10 @@ int drmPreview::addPlane(std::shared_ptr<drm_buffer> buffer_, buffer_type bo_typ
     int plane_id = -1;
 
     plane_id = findPlane(buffer_->pixel_format);
-    
     if (plane_id == -1)
         throw std::runtime_error("No available plane found.");
 
-    if (setPlaneSizes(plane_id))
+    if (setPlaneSizes(buffer_))
         LOG(WARNING) << "Failed to set size for plane " << plane_id;
 
     buffers_[plane_id] = buffer_;
@@ -381,17 +379,19 @@ void drmPreview::showPlane(int plane_id)
         buf_->src_x << 16, buf_->src_y << 16, buf_->src_w << 16, buf_->src_h << 16);
 }
 
-int drmPreview::setPlaneSizes(int plane_id)
+int drmPreview::setPlaneSizes(std::shared_ptr<drm_buffer> buffer_)
 {
-    std::shared_ptr<drm_buffer> buf_ = buffers_[plane_id];
+    std::shared_ptr<drm_buffer> buf_ = buffer_;
 
     buf_->crtc_x = (uint32_t) display_width  * buf_->display_x;
     buf_->crtc_y = (uint32_t) display_height * buf_->display_y;
-    buf_->crtc_w = (uint32_t) display_width  * buf_->display_w - buf_->crtc_x;
-    buf_->crtc_h = (uint32_t) display_height * buf_->display_h - buf_->crtc_y;
+    buf_->crtc_w = (uint32_t) display_width  * buf_->display_w;
+    buf_->crtc_h = (uint32_t) display_height * buf_->display_h;
 
     buf_->src_x = (uint32_t) buf_->width  * buf_->roi_x;
     buf_->src_y = (uint32_t) buf_->height * buf_->roi_y;
-    buf_->src_w = (uint32_t) buf_->width  * buf_->roi_w - buf_->src_x;
-    buf_->src_h = (uint32_t) buf_->height * buf_->roi_h - buf_->src_y;
+    buf_->src_w = (uint32_t) buf_->width  * buf_->roi_w;
+    buf_->src_h = (uint32_t) buf_->height * buf_->roi_h;
+
+    return 0;
 }

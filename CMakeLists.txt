@@ -24,7 +24,7 @@ set_target_properties(preview PROPERTIES
 	)
 
 target_link_libraries(preview ${LIBDRM_LIBRARIES} glog::glog)
-target_include_directories(preview PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include ${LIBDRM_INCLUDE_DIRS})
+target_include_directories(preview PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${LIBDRM_INCLUDE_DIRS})
 
 configure_file(preview.pc.in preview.pc @ONLY)
 

@@ -69,7 +69,7 @@ public:
     int addPlane(std::shared_ptr<drm_buffer> buffer_, buffer_type type);
     void showPlane(int plane_id);
     void clearPlane(int plane_id) {};
-    int setPlaneSizes(int plane_id);
+    int setPlaneSizes(std::shared_ptr<drm_buffer> buffer_);
 
 private:
     void findCrtc();
