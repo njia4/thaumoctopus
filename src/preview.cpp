@@ -298,19 +298,8 @@ int drmPreview::addPlane(std::shared_ptr<drm_buffer> buffer_, buffer_type bo_typ
     if (plane_id == -1)
         throw std::runtime_error("No available plane found.");
 
-    buffer_->crtc_x = (uint32_t) display_width  * buffer_->display_x;
-    buffer_->crtc_y = (uint32_t) display_height * buffer_->display_y;
-    buffer_->crtc_w = (uint32_t) display_width  * buffer_->display_w;
-    buffer_->crtc_h = (uint32_t) display_height * buffer_->display_h;
-
-    buffer_->src_x = (uint32_t) buffer_->width  * buffer_->roi_x;
-    buffer_->src_y = (uint32_t) buffer_->height * buffer_->roi_y;
-    buffer_->src_w = (uint32_t) buffer_->width  * buffer_->roi_w;
-    buffer_->src_h = (uint32_t) buffer_->height * buffer_->roi_h;
-
-    // TODO: Check if src_w and src_h exceeds the frame size
-
-    buffer_->pixel_format = buffer_->pixel_format;
+    if (setPlaneSizes(plane_id))
+        LOG(WARNING) << "Failed to set size for plane " << plane_id;
 
     buffers_[plane_id] = buffer_;
 
@@ -356,8 +345,7 @@ void drmPreview::addDumbBuffer(int plane_id)
     buf_->vaddr = mmap(NULL, create.size, PROT_READ | PROT_WRITE, MAP_SHARED, drmfd, map.offset);
 
     // Set controller
-    drmModeRes *res = drmModeGetResources(drmfd);
-    drmModeConnector *con = drmModeGetConnector(drmfd, res->connectors[con_id]);
+    drmModeConnector *con = drmModeGetConnector(drmfd, con_id);
     drmModeSetCrtc(drmfd, crtc_id, buf_->fb_id, 0, 0, (uint32_t*) &con_id, 1, &con->modes[0]);
 
 }
@@ -391,4 +379,19 @@ void drmPreview::showPlane(int plane_id)
     drmModeSetPlane(drmfd, plane_id, crtc_id, buf_->fb_id, 0,
         buf_->crtc_x, buf_->crtc_y, buf_->crtc_w, buf_->crtc_h,
         buf_->src_x << 16, buf_->src_y << 16, buf_->src_w << 16, buf_->src_h << 16);
+}
+
+int drmPreview::setPlaneSizes(int plane_id)
+{
+    std::shared_ptr<drm_buffer> buf_ = buffers_[plane_id];
+
+    buf_->crtc_x = (uint32_t) display_width  * buf_->display_x;
+    buf_->crtc_y = (uint32_t) display_height * buf_->display_y;
+    buf_->crtc_w = (uint32_t) display_width  * buf_->display_w - buf_->crtc_x;
+    buf_->crtc_h = (uint32_t) display_height * buf_->display_h - buf_->crtc_y;
+
+    buf_->src_x = (uint32_t) buf_->width  * buf_->roi_x;
+    buf_->src_y = (uint32_t) buf_->height * buf_->roi_y;
+    buf_->src_w = (uint32_t) buf_->width  * buf_->roi_w - buf_->src_x;
+    buf_->src_h = (uint32_t) buf_->height * buf_->roi_h - buf_->src_y;
 }
