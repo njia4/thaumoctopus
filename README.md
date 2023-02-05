@@ -7,7 +7,7 @@ This is a very simple c++ library for displaying and overlaying frames obtained 
 
 ## Installation
 
-I have only tested this on a Raspi Zero W board with XXX, so it is possible extra steps are needed. 
+I have only tested this on a Raspi Zero W board with Raspi OS, so it is possible extra steps are needed. 
 
 * Download the package
 
@@ -15,11 +15,12 @@ I have only tested this on a Raspi Zero W board with XXX, so it is possible extr
   git clone https://github.com/njia4/thaumoctopus
   ```
 
-* You should already have ```libdrm``` on Raspi OS. In case this is not true, you can install it using
+* Install required packages
 
   ```shell
   sudo apt-get update
   sudo apt-get install libdrm-dev
+  sudo apt-get install libgoogle-glog-dev
   ```
 
 * Make 

@@ -7,6 +7,6 @@ Name: @PROJECT_NAME@
 Description: @PROJECT_DESCRIPTION@
 Version: @PROJECT_VERSION@
 
-Requires: libdrm glog
+Requires: libdrm libglog
 Libs: -L${libdir} -lpreview
 Cflags: -I${includedir}

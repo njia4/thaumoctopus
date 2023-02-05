@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: BSD-2-Clause */
 /*
  * Copyright (C) 2020, Raspberry Pi (Trading) Ltd.
+ * Copyright (C) 2023, Jia.
  *
  * drm_preview.cpp - DRM-based preview window.
  */
