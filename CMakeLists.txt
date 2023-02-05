@@ -35,3 +35,5 @@ install(TARGETS preview
 
 install(FILES ${CMAKE_BINARY_DIR}/preview.pc
     DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig)
+
+add_subdirectory(EXAMPLES)
